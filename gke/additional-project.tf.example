@@ -1,0 +1,4 @@
+resource "rancher2_project" "additional_project" {
+  name = "utilities"
+  cluster_id = "${rancher2_cluster.gke-shared-vpc-cluster.id}"
+}
