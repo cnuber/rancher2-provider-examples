@@ -17,13 +17,13 @@ resource "aws_iam_role" "eks_cluster_role" {
   assume_role_policy = "${file("aws/assume-role-policy.json")}"
 }
 
-resource "aws_iam_policy_attachment" "attach-eks-cluster-policy" {
+resource "aws_iam_role_policy_attachment" "attach-eks-cluster-policy" {
   name       = "eks-cluster-policy"
   roles      = ["${aws_iam_role.eks_cluster_role.name}"]
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-resource "aws_iam_policy_attachment" "attach-eks-service-policy" {
+resource "aws_iam_role_policy_attachment" "attach-eks-service-policy" {
   name       = "eks-service-policy"
   roles      = ["${aws_iam_role.eks_cluster_role.name}"]
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
