@@ -14,13 +14,11 @@ resource "aws_iam_role" "eks_cluster_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach-eks-cluster-policy" {
-  name       = "eks-cluster-policy"
   role       = "${aws_iam_role.eks_cluster_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
 resource "aws_iam_role_policy_attachment" "attach-eks-service-policy" {
-  name       = "eks-service-policy"
   role       = "${aws_iam_role.eks_cluster_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
