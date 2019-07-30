@@ -10,21 +10,38 @@ This project provides an example for creating a cluster through the Rancher2 Ter
 - a VPC and associated subnets to deploy to at AWS
 - an S3 bucket at Google Cloud to store the Terraform state in (optional)
 
+### Creating the S3 storage bucket
+
+export CLUSTER_NAME=mycluster # set this to the desired cluster name (must be consistent everywhere)
+
+cd state_stores # switch to the state storage directory
+
+cp terraform.tfvars.example $CLUSTER_NAME.tfvars  # copy the example var file to one for this cluster
+
+vim $CLUSTER_NAME.tfvars # set the values to the desired values
+
+terraform init
+
+terraform plan -var-file=$CLUSTER_NAME.tfvars
+
+terraform apply -var-file=$CLUSTER_NAME.tfvars
+
 ### Configuring deployment settings
 
-cp terraform.tfvars.example terraform.tfvars  # copy the example var file to one for this cluster
+from the eks directory in this repo:
 
-vim terraform.tfvars # set the values to the desired values
+export CLUSTER_NAME=mycluster # set this to the desired cluster name (must be consistent everywhere)
 
+cp terraform.tfvars.example tfvars/$CLUSTER_NAME.tfvars # copy the example tfvars to one for this cluster
+
+vim tfvars/$CLUSTER_NAME.tfvars # modify the vars for your cluster deployment
 
 ### Running the terraform (note that it's always important to check the plan output before applying to ensure you are getting the intended results)
 
-terraform init 
+terraform init -backend-config=state_stores/backends/backend-$CLUSTER_NAME.conf -var-file=tfvars/$CLUSTER_NAME.tfvars
 
-terraform plan 
+terraform plan -var-file=tfvars/$CLUSTER_NAME.tfvars
 
-terraform apply
-
-
+terraform apply -var-file=tfvars/$CLUSTER_NAME.tfvars
 
 

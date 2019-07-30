@@ -1,11 +1,7 @@
-# terraform {
-#  backend "s3" {
-#    bucket = "rancher2-terraform-states"
-#    key = "rancher2-terraform-states/my-cluster-name" ## Make sure this is unique per client
-#    region = "your-aws-region"
-#    profile = "your-aws-profile"
-#  }
-#}
+ terraform {
+  backend "s3" {
+  }
+}
 
 provider "aws" {
   profile = "${var.aws_profile}"
