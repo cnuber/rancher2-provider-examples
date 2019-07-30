@@ -8,7 +8,7 @@ This project provides an example for creating a cluster through the Rancher2 Ter
 - terraform 0.12.x [terraform client download](https://www.terraform.io/downloads.html)
 - an AWS profile with sufficient access to deploy the necessary resources
 - a VPC and associated subnets to deploy to at AWS
-- an S3 bucket at Google Cloud to store the Terraform state in (optional)
+- an S3 bucket at AWS Cloud to store the Terraform state in (optional)
 
 ### Creating the S3 storage bucket
 
