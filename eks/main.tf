@@ -80,7 +80,7 @@ resource "rancher2_cluster" "eks-cluster" {
       "${var.eks_subnet3}"
     ]
     virtual_network = "${var.vpc_id}"
-    associate_worker_node_public_ip = "false"
+    associate_worker_node_public_ip = "true"
     instance_type = "${var.aws_instance_type}"
     kubernetes_version = "${var.eks_kubernetes_version}"
     minimum_nodes = "${var.eks_min_nodes}"
