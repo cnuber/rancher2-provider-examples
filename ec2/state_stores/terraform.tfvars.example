@@ -1,0 +1,4 @@
+aws_profile="mainaccount" # local AWS profile with access to create S3 buckets
+aws_region="us-east-1" # region to create the s3 bucket in
+cluster_name="dev1" # name of the Kubernetes cluster (must be consistent with the cluster deployment cluster_name var)
+prefix="devteam" # sets the OWNER tag for the s3 bucket
