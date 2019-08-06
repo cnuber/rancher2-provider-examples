@@ -104,11 +104,10 @@ resource "rancher2_node_template" "nodetemplate" {
     instance_type = "${var.control_plane_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
-    ssh_keypath = "id_rsa"
     ssh_user = "${var.ssh_username}"
-    subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[0]}"
+    subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
     vpc_id = "${var.vpc_id}"
-    zone = "${data.aws_subnet.selected[count.index].availability_zone}"
+    zone = substr("${data.aws_subnet.selected[count.index].availability_zone}", 9, 1)
   }
 }
 
@@ -117,7 +116,7 @@ resource "rancher2_node_pool" "control_plane_node_pool" {
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-cp-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-cp"
-  node_template_id = "rancher2_node_template.nodetemplate[count.index]"
+  node_template_id = "${rancher2_node_template.nodetemplate[count.index].id}"
   quantity = 1
   control_plane = true
   etcd = false
@@ -129,7 +128,7 @@ resource "rancher2_node_pool" "etcd_node_pool" {
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-etcd-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-etcd"
-  node_template_id = "rancher2_node_template.nodetemplate[count.index]"
+  node_template_id = "${rancher2_node_template.nodetemplate[count.index].id}"
   quantity = 1
   control_plane = false
   etcd = true
@@ -141,7 +140,7 @@ resource "rancher2_node_pool" "worker_node_pool" {
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-worker-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-worker"
-  node_template_id = "rancher2_node_template.nodetemplate[count.index]"
+  node_template_id = "${rancher2_node_template.nodetemplate[count.index].id}"
   quantity = 1
   control_plane = false
   etcd = false
