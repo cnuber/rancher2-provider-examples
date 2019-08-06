@@ -34,19 +34,19 @@ variable "server_instance_type" {
   default     = ""
 }
 variable "worker_instance_type" {
-  default     = ""
+  default     = "t3.large"
 }
-variable "rancher_etcd_node_count" {
-  default     = ""
+variable "worker_count" {
+  default     = "3"
 }
-variable "rancher_control_plane_node_count" {
-  default     = ""
+variable "control_plane_count" {
+  default     = "3"
 }
-variable "rancher_worker_node_count" {
-  default     = ""
+variable "etcd_count" {
+  default     = "3"
 }
 variable "control_plane_instance_type" {
-  default     = ""
+  default     = "m5.large"
 }
 variable "vpc_id" {
   default     = ""
@@ -54,7 +54,13 @@ variable "vpc_id" {
 variable "vpc_cidr" {
   default     = ""
 }
+variable "aws_subnet_ids" {
+  default     = ""
+}
 variable "ssh_public_key_file" {
+  default     = ""
+}
+variable "ssh_key_pair_name" {
   default     = ""
 }
 variable "owner_tag" {

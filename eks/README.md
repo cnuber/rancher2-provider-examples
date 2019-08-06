@@ -43,5 +43,3 @@ terraform init -backend-config=state_stores/backends/backend-$CLUSTER_NAME.conf 
 terraform plan -var-file=tfvars/$CLUSTER_NAME.tfvars
 
 terraform apply -var-file=tfvars/$CLUSTER_NAME.tfvars
-
-
