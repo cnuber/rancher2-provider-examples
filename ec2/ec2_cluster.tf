@@ -105,16 +105,15 @@ resource "rancher2_cluster" "cluster" {
 resource "rancher2_node_template" "nodetemplate" {
   name = "${var.cluster_name}-node-template"
   description = "node template for ${var.cluster_name}"
-  docker_version = "18.09.2"
   amazonec2_config {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
-    ami = "${data.aws_ami.ubuntu.image_id}"
+    ami = "ami-835b4efa"
     instance_type = "${var.control_plane_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
-    ssh_keypath = "${var.ssh_public_key_file}"
+    ssh_keypath = "id_rsa"
     ssh_user = "${var.ssh_username}"
     subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[0]}"
     vpc_id = "${var.vpc_id}"
