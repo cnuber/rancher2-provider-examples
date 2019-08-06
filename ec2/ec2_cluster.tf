@@ -32,24 +32,14 @@ resource "aws_key_pair" "ssh_key" {
 data "aws_subnet_ids" "available" {
   vpc_id = "${var.vpc_id}"
   filter {
-    name   = "availability-zone"
-    values = ["${var.aws_region}a"]       # insert values here
+  name   = "tag:Name"
+  values = ["*public*"]       # insert values here
   }
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # official Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+data "aws_subnet" "selected" {
+  count = "3"
+  id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
 }
 
 resource "aws_security_group" "cluster_sg" {
@@ -103,7 +93,8 @@ resource "rancher2_cluster" "cluster" {
 }
 
 resource "rancher2_node_template" "nodetemplate" {
-  name = "${var.cluster_name}-node-template"
+  count = "3"
+  name = "${var.cluster_name}-node-template-az${count.index}"
   description = "node template for ${var.cluster_name}"
   amazonec2_config {
     access_key = "${var.aws_access_key}"
@@ -117,38 +108,41 @@ resource "rancher2_node_template" "nodetemplate" {
     ssh_user = "${var.ssh_username}"
     subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[0]}"
     vpc_id = "${var.vpc_id}"
-    zone = "a"
+    zone = "${data.aws_subnet.selected[count.index].availability_zone}"
   }
 }
 
 resource "rancher2_node_pool" "control_plane_node_pool" {
+  count = "3"
   cluster_id =  "${rancher2_cluster.cluster.id}"
-  name = "${var.cluster_name}-cp-node-pool"
+  name = "${var.cluster_name}-cp-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-cp"
-  node_template_id = "${rancher2_node_template.nodetemplate.id}"
-  quantity = 3
+  node_template_id = "rancher2_node_template.nodetemplate[count.index]"
+  quantity = 1
   control_plane = true
   etcd = false
   worker = false
 }
 
 resource "rancher2_node_pool" "etcd_node_pool" {
+  count = "3"
   cluster_id =  "${rancher2_cluster.cluster.id}"
-  name = "${var.cluster_name}-etcd-node-pool"
+  name = "${var.cluster_name}-etcd-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-etcd"
-  node_template_id = "${rancher2_node_template.nodetemplate.id}"
-  quantity = 3
+  node_template_id = "rancher2_node_template.nodetemplate[count.index]"
+  quantity = 1
   control_plane = false
   etcd = true
   worker = false
 }
 
 resource "rancher2_node_pool" "worker_node_pool" {
+  count = "3"
   cluster_id =  "${rancher2_cluster.cluster.id}"
-  name = "${var.cluster_name}-worker-node-pool"
+  name = "${var.cluster_name}-worker-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-worker"
-  node_template_id = "${rancher2_node_template.nodetemplate.id}"
-  quantity = 3
+  node_template_id = "rancher2_node_template.nodetemplate[count.index]"
+  quantity = 1
   control_plane = false
   etcd = false
   worker = true
