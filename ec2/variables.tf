@@ -30,6 +30,9 @@ variable "domain_name" {
 variable "dns_name" {
   default     = ""
 }
+variable "ami_id" {
+  default     = ""
+}
 variable "server_instance_type" {
   default     = ""
 }

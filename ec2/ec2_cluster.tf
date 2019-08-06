@@ -100,13 +100,14 @@ resource "rancher2_node_template" "control_plane_nodetemplate" {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
-    ami = "ami-835b4efa"
+    ami = "${var.ami_id}"
     instance_type = "${var.control_plane_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
     keypair_name = "${var.ssh_key_pair_name}"
+    use_private_address = true
     ssh_user = "${var.ssh_username}"
-    subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[0]}"
+    subnet_id = "${element(tolist(data.aws_subnet_ids.available.ids),count.index)}"
     vpc_id = "${var.vpc_id}"
     zone = "${data.aws_subnet.selected[count.index].availability_zone}"
   }
@@ -120,13 +121,14 @@ resource "rancher2_node_template" "worker_nodetemplate" {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
-    ami = "ami-835b4efa"
+    ami = "${var.ami_id}"
     instance_type = "${var.worker_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
     keypair_name = "${var.ssh_key_pair_name}"
+    use_private_address = true
     ssh_user = "${var.ssh_username}"
-    subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[0]}"
+    subnet_id = "${element(tolist(data.aws_subnet_ids.available.ids),count.index)}"
     vpc_id = "${var.vpc_id}"
     zone = "${data.aws_subnet.selected[count.index].availability_zone}"
   }
