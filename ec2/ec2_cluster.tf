@@ -94,8 +94,10 @@ resource "rancher2_cluster" "cluster" {
 
 resource "rancher2_node_template" "control_plane_nodetemplate" {
   count = "${var.worker_count}"
-  name = "${var.cluster_name}-node-template-az${count.index}"
+  name = "${var.cluster_name}-node-template-az${count.index+1}"
   description = "node template for ${var.cluster_name}"
+  use_internal_ip_address = "true"
+  use_private_address = "true"
   amazonec2_config {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
@@ -114,8 +116,10 @@ resource "rancher2_node_template" "control_plane_nodetemplate" {
 
 resource "rancher2_node_template" "worker_nodetemplate" {
   count = "${var.worker_count}"
-  name = "${var.cluster_name}-node-template-az${count.index}"
+  name = "${var.cluster_name}-node-template-az${count.index+1}"
   description = "node template for ${var.cluster_name}"
+  use_internal_ip_address = "true"
+  use_private_address = "true"
   amazonec2_config {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
@@ -133,39 +137,39 @@ resource "rancher2_node_template" "worker_nodetemplate" {
 }
 
 resource "rancher2_node_pool" "control_plane_node_pool" {
-  count = "${var.control_plane_count}"
+  count = "1"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-cp-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-cp"
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
-  quantity = 1
+  quantity = "${var.control_plane_count}"
   control_plane = true
   etcd = false
   worker = false
 }
 
 resource "rancher2_node_pool" "etcd_node_pool" {
-  count = "${var.etcd_count}"
+  count = "1"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-etcd-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-etcd"
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
-  quantity = 1
+  quantity = "${var.etcd_count}"
   control_plane = false
   etcd = true
   worker = false
 }
 
 resource "rancher2_node_pool" "worker_node_pool" {
-  count = "3"
+  count = "1"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-worker-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-worker"
-  node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
+  node_template_id = "${rancher2_node_template.worker_nodetemplate[count.index].id}"
   labels = {
     "node-role.kubernetes.io/worker-web" = "true"
   }
-  quantity = 1
+  quantity = "${var.worker_count}"
   control_plane = false
   etcd = false
   worker = true
