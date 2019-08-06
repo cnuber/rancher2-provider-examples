@@ -93,11 +93,10 @@ resource "rancher2_cluster" "cluster" {
 }
 
 resource "rancher2_node_template" "control_plane_nodetemplate" {
-  count = "${var.worker_count}"
-  name = "${var.cluster_name}-node-template-az${count.index+1}"
+  count = "${var.control_plane_count}"
+  name = "${var.cluster_name}-cp-node-template-az${count.index}"
   description = "node template for ${var.cluster_name}"
   use_internal_ip_address = "true"
-  use_private_address = "true"
   amazonec2_config {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
@@ -111,20 +110,20 @@ resource "rancher2_node_template" "control_plane_nodetemplate" {
     subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
     vpc_id = "${var.vpc_id}"
     zone = substr("${data.aws_subnet.selected[count.index].availability_zone}", 9, 1)
+    use_private_address = "true"
   }
 }
 
 resource "rancher2_node_template" "worker_nodetemplate" {
   count = "${var.worker_count}"
-  name = "${var.cluster_name}-node-template-az${count.index+1}"
+  name = "${var.cluster_name}-worker-node-template-az${count.index}"
   description = "node template for ${var.cluster_name}"
   use_internal_ip_address = "true"
-  use_private_address = "true"
   amazonec2_config {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
-    ami = "ami-835b4efa"
+    ami = "${var.ami_id}"
     instance_type = "${var.worker_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
@@ -133,35 +132,37 @@ resource "rancher2_node_template" "worker_nodetemplate" {
     subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
     vpc_id = "${var.vpc_id}"
     zone = substr("${data.aws_subnet.selected[count.index].availability_zone}", 9, 1)
+    use_private_address = "true"
   }
 }
 
 resource "rancher2_node_pool" "control_plane_node_pool" {
-  count = "1"
+  count = "${var.control_plane_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-cp-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-cp"
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
-  quantity = "${var.control_plane_count}"
+  quantity = 1
   control_plane = true
   etcd = false
   worker = false
+  depends_on = "${rancher2_node_pool.etcd_node_pool}"
 }
 
 resource "rancher2_node_pool" "etcd_node_pool" {
-  count = "1"
+  count = "${var.etcd_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-etcd-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-etcd"
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
-  quantity = "${var.etcd_count}"
+  quantity = 1
   control_plane = false
   etcd = true
   worker = false
 }
 
 resource "rancher2_node_pool" "worker_node_pool" {
-  count = "1"
+  count = "${var.worker_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-worker-node-pool-az${count.index}"
   hostname_prefix =  "${var.cluster_name}-worker"
@@ -169,10 +170,11 @@ resource "rancher2_node_pool" "worker_node_pool" {
   labels = {
     "node-role.kubernetes.io/worker-web" = "true"
   }
-  quantity = "${var.worker_count}"
+  quantity = 1
   control_plane = false
   etcd = false
   worker = true
+  depends_on = "${rancher2_node_pool.control_plane_node_pool}"
 }
 
 resource "rancher2_etcd_backup" "cluster-backups" {
