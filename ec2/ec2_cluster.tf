@@ -94,7 +94,7 @@ resource "rancher2_cluster" "cluster" {
 
 resource "rancher2_node_template" "nodetemplate" {
   count = "3"
-  name = "${var.cluster_name}-az${count.index+1}"
+  name = "${var.cluster_name}-az${count.index}"
   description = "node template for ${var.cluster_name}"
   use_internal_ip_address = "true"
   amazonec2_config {
@@ -114,39 +114,42 @@ resource "rancher2_node_template" "nodetemplate" {
 }
 
 resource "rancher2_node_pool" "control_plane_node_pool" {
-  count = "1"
+  count = "3"
   cluster_id =  "${rancher2_cluster.cluster.id}"
-  name = "${var.cluster_name}-cp-node-pool-az${count.index+1}"
-  hostname_prefix =  "${var.cluster_name}-cp"
+  name = "${var.cluster_name}-cp-node-pool-az${count.index}"
+  hostname_prefix =  "${var.cluster_name}-cp${count.index}"
   node_template_id = "${rancher2_node_template.nodetemplate[count.index].id}"
-  quantity = 3
+  quantity = 1
   control_plane = true
   etcd = false
   worker = false
+  depends_on = [rancher2_node_pool.etcd_node_pool]
 }
 
 resource "rancher2_node_pool" "etcd_node_pool" {
-  count = "1"
+  count = "3"
   cluster_id =  "${rancher2_cluster.cluster.id}"
-  name = "${var.cluster_name}-etcd-node-pool-az${count.index+1}"
-  hostname_prefix =  "${var.cluster_name}-etcd"
+  name = "${var.cluster_name}-etcd-node-pool-az${count.index}"
+  hostname_prefix =  "${var.cluster_name}-etcd${count.index}"
   node_template_id = "${rancher2_node_template.nodetemplate[count.index].id}"
-  quantity = 3
+  quantity = 1
   control_plane = false
   etcd = true
   worker = false
+  depends_on = [rancher2_node_template.nodetemplate]
 }
 
 resource "rancher2_node_pool" "worker_node_pool" {
-  count = "1"
+  count = "3"
   cluster_id =  "${rancher2_cluster.cluster.id}"
-  name = "${var.cluster_name}-worker-node-pool-az${count.index+1}"
-  hostname_prefix =  "${var.cluster_name}-worker"
+  name = "${var.cluster_name}-worker-node-pool-az${count.index}"
+  hostname_prefix =  "${var.cluster_name}-worker${count.index}"
   node_template_id = "${rancher2_node_template.nodetemplate[count.index].id}"
-  quantity = 3
+  quantity = 1
   control_plane = false
   etcd = false
   worker = true
+  depends_on = [rancher2_node_pool.etcd_node_pool]
 }
 
 resource "rancher2_etcd_backup" "cluster-backups" {
