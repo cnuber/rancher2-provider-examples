@@ -182,11 +182,7 @@ resource "rancher2_node_pool" "control_plane_node_pool" {
   count = "${var.control_plane_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-cp-node-pool-az${count.index}"
-<<<<<<< HEAD
   hostname_prefix =  "${var.cluster_name}-cp-${count.index}-${data.aws_subnet.selected[count.index].availability_zone}"
-=======
-  hostname_prefix =  "${var.cluster_name}-cp${count.index}-${data.aws_subnet.selected_private[count.index].availability_zone}"
->>>>>>> e2c49ce7f649629005f2b9898754fdd7fdf2acf3
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
   quantity = 1
   control_plane = true
