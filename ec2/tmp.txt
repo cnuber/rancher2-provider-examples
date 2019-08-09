@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    kubernetes.io/createdby: aws-ebs-dynamic-provisioner
+    pv.kubernetes.io/bound-by-controller: "yes"
+    pv.kubernetes.io/provisioned-by: kubernetes.io/aws-ebs
+  creationTimestamp: 2019-06-14T19:23:17Z
+  finalizers:
+  - kubernetes.io/pv-protection
+  labels:
+    failure-domain.beta.kubernetes.io/region: us-west-2
+    failure-domain.beta.kubernetes.io/zone: us-west-2b
+  name: pvc-dc559ddb-8ed9-11e9-a15c-06dc10c0613e
+  resourceVersion: "252371"
+  selfLink: /api/v1/persistentvolumes/pvc-dc559ddb-8ed9-11e9-a15c-06dc10c0613e
+  uid: dc92f6a7-8ed9-11e9-a15c-06dc10c0613e
+spec:
+  accessModes:
+  - ReadWriteOnce
+  awsElasticBlockStore:
+    fsType: ext4
+    volumeID: aws://us-west-2b/vol-00fbbccf3d783b54a
+  capacity:
+    storage: 8Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: datadir-mongodb-primary-0
+    namespace: mongodb
+    resourceVersion: "252310"
+    uid: dc559ddb-8ed9-11e9-a15c-06dc10c0613e
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: failure-domain.beta.kubernetes.io/zone
+          operator: In
+          values:
+          - us-west-2b
+        - key: failure-domain.beta.kubernetes.io/region
+          operator: In
+          values:
+          - us-west-2
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: gp2
+status:
+  phase: Bound
