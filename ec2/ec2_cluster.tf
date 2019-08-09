@@ -24,7 +24,12 @@ resource "aws_s3_bucket" "etcd_backup_store" {
   }
 }
 
-data "aws_subnet_ids" "available" {
+resource "aws_key_pair" "ssh_key" {
+  key_name   = "${var.cluster_name}-cluster"
+  public_key = "${file(var.ssh_public_key_file)}"
+}
+
+data "aws_subnet_ids" "available_private" {
   vpc_id = "${var.vpc_id}"
   filter {
   name   = "tag:Name"
@@ -32,9 +37,22 @@ data "aws_subnet_ids" "available" {
   }
 }
 
-data "aws_subnet" "selected" {
+data "aws_subnet_ids" "available_public" {
+  vpc_id = "${var.vpc_id}"
+  filter {
+  name   = "tag:Name"
+  values = ["*public*"]       # insert values here
+  }
+}
+
+data "aws_subnet" "selected_private" {
   count = "3"
-  id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
+  id = "${tolist(data.aws_subnet_ids.available_private.ids)[count.index]}"
+}
+
+data "aws_subnet" "selected_public" {
+  count = "3"
+  id = "${tolist(data.aws_subnet_ids.available_public.ids)[count.index]}"
 }
 
 resource "aws_security_group" "cluster_sg" {
@@ -103,11 +121,32 @@ resource "rancher2_node_template" "control_plane_nodetemplate" {
     instance_type = "${var.control_plane_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
-    ssh_keypath = "${var.ssh_public_key_file}"
-    ssh_user = "${var.ssh_username}"
-    subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
+    ssh_user = "ubuntu"
+    subnet_id = "${tolist(data.aws_subnet_ids.available_private.ids)[count.index]}"
+    use_private_address = "true"
     vpc_id = "${var.vpc_id}"
-    zone = substr("${data.aws_subnet.selected[count.index].availability_zone}", 9, 1)
+    zone = substr("${data.aws_subnet.selected_private[count.index].availability_zone}", 9, 1)
+    use_private_address = "true"
+  }
+}
+
+resource "rancher2_node_template" "worker_nodetemplate" {
+  count = "${var.worker_count}"
+  name = "${var.cluster_name}-worker-node-template-az${count.index}"
+  description = "node template for ${var.cluster_name}"
+  use_internal_ip_address = "true"
+  amazonec2_config {
+    access_key = "${var.aws_access_key}"
+    secret_key = "${var.aws_secret_key}"
+    region = "${var.aws_region}"
+    ami = "${var.ami_id}"
+    instance_type = "${var.worker_instance_type}"
+    root_size = "50"
+    security_group = ["${aws_security_group.cluster_sg.name}"]
+    ssh_user = "${var.ssh_username}"
+    subnet_id = "${tolist(data.aws_subnet_ids.available_private.ids)[count.index]}"
+    vpc_id = "${var.vpc_id}"
+    zone = substr("${data.aws_subnet.selected_private[count.index].availability_zone}", 9, 1)
     use_private_address = "true"
   }
 }
@@ -127,9 +166,9 @@ resource "rancher2_node_template" "worker_nodetemplate" {
     security_group = ["${aws_security_group.cluster_sg.name}"]
     ssh_keypath = "${var.ssh_public_key_file}"
     ssh_user = "${var.ssh_username}"
-    subnet_id = "${tolist(data.aws_subnet_ids.available.ids)[count.index]}"
+    subnet_id = "${tolist(data.aws_subnet_ids.available_private.ids)[count.index]}"
     vpc_id = "${var.vpc_id}"
-    zone = substr("${data.aws_subnet.selected[count.index].availability_zone}", 9, 1)
+    zone = substr("${data.aws_subnet.selected_private[count.index].availability_zone}", 9, 1)
     use_private_address = "true"
     tags = "node-role.kubernetes.io/worker-web,true"
   }
@@ -143,7 +182,11 @@ resource "rancher2_node_pool" "control_plane_node_pool" {
   count = "${var.control_plane_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-cp-node-pool-az${count.index}"
+<<<<<<< HEAD
   hostname_prefix =  "${var.cluster_name}-cp-${count.index}-${data.aws_subnet.selected[count.index].availability_zone}"
+=======
+  hostname_prefix =  "${var.cluster_name}-cp${count.index}-${data.aws_subnet.selected_private[count.index].availability_zone}"
+>>>>>>> e2c49ce7f649629005f2b9898754fdd7fdf2acf3
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
   quantity = 1
   control_plane = true
@@ -156,7 +199,7 @@ resource "rancher2_node_pool" "etcd_node_pool" {
   count = "${var.etcd_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-etcd-node-pool-az${count.index}"
-  hostname_prefix =  "${var.cluster_name}-etcd-${count.index}-${data.aws_subnet.selected[count.index].availability_zone}"
+  hostname_prefix =  "${var.cluster_name}-etcd-${count.index}-${data.aws_subnet.selected_private[count.index].availability_zone}"
   node_template_id = "${rancher2_node_template.control_plane_nodetemplate[count.index].id}"
   quantity = 1
   control_plane = false
@@ -170,7 +213,7 @@ resource "rancher2_node_pool" "worker_node_pool" {
   count = "${var.worker_count}"
   cluster_id =  "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-worker-node-pool-az${count.index}"
-  hostname_prefix =  "${var.cluster_name}-worker-${count.index}-${data.aws_subnet.selected[count.index].availability_zone}"
+  hostname_prefix =  "${var.cluster_name}-worker-${count.index}-${data.aws_subnet.selected_private[count.index].availability_zone}"
   node_template_id = "${rancher2_node_template.worker_nodetemplate[count.index].id}"
   quantity = 1
   control_plane = false
@@ -198,4 +241,17 @@ resource "rancher2_etcd_backup" "cluster-backups" {
   cluster_id = "${rancher2_cluster.cluster.id}"
   name = "${var.cluster_name}-etcd-backup"
   filename = "${var.cluster_name}-etcd-backup"
+}
+resource "null_resource" "subnet_tagging_private" {
+  count = 3
+  provisioner "local-exec" {
+    command = "aws ec2 create-tags --resources ${tolist(data.aws_subnet_ids.available_private.ids)[count.index]} --tags \"Key=kubernetes.io/cluster/${rancher2_cluster.cluster.id},Value=shared\" --region ${var.aws_region} --profile ${var.aws_profile}"
+  }
+}
+
+resource "null_resource" "subnet_tagging_public" {
+  count = 3
+  provisioner "local-exec" {
+    command = "aws ec2 create-tags --resources ${tolist(data.aws_subnet_ids.available_public.ids)[count.index]} --tags \"Key=kubernetes.io/cluster/${rancher2_cluster.cluster.id},Value=shared\" --region ${var.aws_region} --profile ${var.aws_profile}"
+  }
 }
