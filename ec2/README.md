@@ -40,8 +40,8 @@ vim tfvars/$CLUSTER_NAME.tfvars # modify the vars for your cluster deployment
 
 terraform init -backend-config=state_stores/backends/backend-$CLUSTER_NAME.conf -var-file=tfvars/$CLUSTER_NAME.tfvars
 
-terraform plan -var-file=tfvars/$CLUSTER_NAME.tfvars
+terraform plan -var-file=tfvars/$CLUSTER_NAME.tfvars -var cluster_name="$CLUSTER_NAME" -var cluster_description="K8s cluster for $CLUSTER_NAME"
 
-terraform apply -var-file=tfvars/$CLUSTER_NAME.tfvars
+terraform apply -var-file=tfvars/$CLUSTER_NAME.tfvars -var cluster_name="$CLUSTER_NAME" -var cluster_description="K8s cluster for $CLUSTER_NAME"
 
 
