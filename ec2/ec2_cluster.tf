@@ -24,10 +24,10 @@ resource "aws_s3_bucket" "etcd_backup_store" {
   }
 }
 
-resource "aws_key_pair" "ssh_key" {
-  key_name   = "${var.cluster_name}-cluster"
-  public_key = "${file(var.ssh_public_key_file)}"
-}
+# resource "aws_key_pair" "ssh_key" {
+#   key_name   = "${var.cluster_name}-cluster"
+#   public_key = "${file(var.ssh_public_key_file)}"
+# }
 
 data "aws_subnet_ids" "available_private" {
   vpc_id = "${var.vpc_id}"
@@ -110,7 +110,7 @@ resource "rancher2_cluster" "cluster" {
 
 resource "rancher2_node_template" "control_plane_nodetemplate" {
   count = "${var.control_plane_count}"
-  name = "${var.cluster_name}-cp-node-template-az${count.index}"
+  name = "${var.cluster_name}-cp-node-template-az-${count.index}"
   description = "node template for ${var.cluster_name}"
   use_internal_ip_address = "true"
   amazonec2_config {
@@ -131,7 +131,7 @@ resource "rancher2_node_template" "control_plane_nodetemplate" {
 
 resource "rancher2_node_template" "worker_nodetemplate" {
   count = "${var.worker_count}"
-  name = "${var.cluster_name}-worker-node-template-az${count.index}"
+  name = "${var.cluster_name}-worker-node-template-az-${count.index}"
   description = "node template for ${var.cluster_name}"
   use_internal_ip_address = "true"
   amazonec2_config {
