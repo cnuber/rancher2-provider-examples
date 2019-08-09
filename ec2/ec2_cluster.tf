@@ -86,6 +86,9 @@ resource "rancher2_cluster" "cluster" {
   name = "${var.cluster_name}"
   description = "${var.cluster_description}"
   rke_config {
+    cloud_provider {
+      name = "aws"
+    }
     network {
       plugin = "canal"
     }
@@ -102,6 +105,7 @@ resource "rancher2_node_template" "nodetemplate" {
     secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
     ami = "ami-d15a75c7"
+    iam_instance_profile = "${aws_iam_instance_profile.node_instance_profile.name}"
     instance_type = "${var.control_plane_instance_type}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
