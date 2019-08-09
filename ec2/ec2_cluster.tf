@@ -119,6 +119,7 @@ resource "rancher2_node_template" "control_plane_nodetemplate" {
     region = "${var.aws_region}"
     ami = "${var.ami_id}"
     instance_type = "${var.control_plane_instance_type}"
+    iam_instance_profile = "${aws_iam_instance_profile.node_instance_profile.name}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
     ssh_user = "ubuntu"
@@ -140,6 +141,7 @@ resource "rancher2_node_template" "worker_nodetemplate" {
     region = "${var.aws_region}"
     ami = "${var.ami_id}"
     instance_type = "${var.worker_instance_type}"
+    iam_instance_profile = "${aws_iam_instance_profile.node_instance_profile.name}"
     root_size = "50"
     security_group = ["${aws_security_group.cluster_sg.name}"]
     ssh_keypath = "${var.ssh_public_key_file}"
